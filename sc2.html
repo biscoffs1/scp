@@ -46,11 +46,11 @@
             background-color: var(--toolbar-color);
         }
         .bottom-bar {
-            padding: 4px 10px;
+            padding: 3px 10px;
             border-top: 1px solid #444444;
             display: flex;
             align-items: center;
-            min-height: 32px;
+            min-height: 26px;
             box-sizing: border-box;
             background-color: var(--toolbar-color);
             color: white;
@@ -192,14 +192,14 @@
             transform: rotate(270deg);
         }
         select {
-            height: 36px;
+            height: 20px;
             padding: 0 8px 0 8px;
             padding-right: 32px;
             border: 1px solid #444444;
             background-color: var(--toolbar-color);
             color: #ffffff;
             border-radius: 0;
-            font-size: 14px;
+            font-size: 11px;
             box-sizing: border-box;
             margin-right: 10px;
             text-align: center;
@@ -215,13 +215,13 @@
             color: #000000;
         }
         .bar-button {
-            min-height: 24px;
-            padding: 2px 8px;
+            min-height: 20px;
+            padding: 0 6px;
             border: 1px solid #444444;
             background-color: var(--toolbar-color);
             color: #ffffff;
             border-radius: 0;
-            font-size: 12px;
+            font-size: 11px;
             cursor: pointer;
         }
         .bar-button:hover {
@@ -2056,9 +2056,10 @@
 
                     rowDiv.addEventListener('click', () => {
                         if (currentSelectionType === 'play') {
+                            const selectedRotation = rotationSelector.value;
                             const key = project.path + '|' + videoFile.name;
                             const selection = shortcutSelections.get(key);
-                            const activeRotation = (selection && selection.rotation) ? selection.rotation : rotation;
+                            const activeRotation = selectedRotation !== "0" ? selectedRotation : ((selection && selection.rotation) ? selection.rotation : rotation);
                             playVideo(videoFile, activeRotation);
                             return;
                         }
@@ -2274,9 +2275,10 @@
                                         }
                                     }
                                     if (videoFile) {
+                                        const selectedRotation = rotationSelector.value;
                                         const key = subfolderName + '|' + videoBaseName;
                                         const selection = shortcutSelections.get(key);
-                                        const activeRotation = (selection && selection.rotation) ? selection.rotation : rotation;
+                                        const activeRotation = selectedRotation !== "0" ? selectedRotation : ((selection && selection.rotation) ? selection.rotation : rotation);
                                         playVideo(videoFile, activeRotation);
                                     }
                                     return;
@@ -2640,9 +2642,10 @@
                             const videoFile = await video.getFile();
                             const videoBaseName = video.name.substring(0, video.name.lastIndexOf('.'));
                             const loadedRotation = projectRotationData.get(videoBaseName.toLowerCase()) || "0";
+                            const selectedRotation = rotationSelector.value;
                             const key = project.path + '|playlist_entry';
                             const selection = shortcutSelections.get(key);
-                            const activeRotation = (selection && selection.rotation) ? selection.rotation : loadedRotation;
+                            const activeRotation = selectedRotation !== "0" ? selectedRotation : ((selection && selection.rotation) ? selection.rotation : loadedRotation);
                             playVideo(videoFile, activeRotation);
                             return;
                         }
