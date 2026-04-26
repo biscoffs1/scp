@@ -177,6 +177,15 @@
         .rotate-270 {
             transform: translate(-50%, -50%) rotate(270deg);
         }
+        #player.rotate-90 {
+            transform: rotate(90deg);
+        }
+        #player.rotate-180 {
+            transform: rotate(180deg);
+        }
+        #player.rotate-270 {
+            transform: rotate(270deg);
+        }
         select {
             height: 36px;
             padding: 0 8px 0 8px;
@@ -492,6 +501,7 @@
                     <button id="both-sc-btn" class="bar-button selection-type-button" style="display: none;"><span class="color-circle"></span>Both</button>
                     <button id="delete-sc-btn" class="bar-button selection-type-button" style="display: none;"><span class="color-circle"></span>Delete</button>
                     <button id="playlist-sc-btn" class="bar-button selection-type-button" style="display: none;"><span class="color-circle"></span>Playlist</button>
+                    <button id="play-btn" class="bar-button selection-type-button"><span class="color-circle"></span>Play</button>
                 </div>
                 <div id="rotation-controls" style="display: none; align-items: center;">
                     <select id="rotation-selector" style="margin-right: 10px;">
@@ -508,6 +518,13 @@
                     <button id="delete-shortcuts-btn" class="bar-button" style="display: none;">Delete Selected Shortcuts</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div id="video-modal" class="modal">
+        <div class="modal-content" style="max-width: 80%; padding: 0; background: black; position: relative;">
+            <span class="close" id="close-video-modal" style="position: absolute; right: 10px; top: 5px; color: white; z-index: 3000;">&times;</span>
+            <video id="player" controls style="width: 100%; display: block;"></video>
         </div>
     </div>
 
@@ -551,6 +568,10 @@
         const bothScBtn = document.getElementById('both-sc-btn');
         const deleteScBtn = document.getElementById('delete-sc-btn');
         const playlistScBtn = document.getElementById('playlist-sc-btn');
+        const playBtn = document.getElementById('play-btn');
+        const videoModal = document.getElementById('video-modal');
+        const player = document.getElementById('player');
+        const closeVideoModal = document.getElementById('close-video-modal');
         const prevCanvasBtn = document.getElementById('prev-canvas-btn');
         const nextCanvasBtn = document.getElementById('next-canvas-btn');
         const loadMenuBtn = document.getElementById('load-menu-btn');
@@ -576,6 +597,7 @@
         let currentSelectionType = 'root-sc';
         let originalPlaylistShortcuts = [];
         let playlistCreationTime = null;
+        let currentVideoUrl = null;
         const mainContainer = document.querySelector('.main-container');
         const showDatesCheckbox = document.getElementById('show-dates-checkbox');
         const showNumbersCheckbox = document.getElementById('show-numbers-checkbox');
@@ -865,6 +887,12 @@
 
             deleteScBtn.addEventListener('click', () => setSelectionType('delete-sc'));
             playlistScBtn.addEventListener('click', () => setSelectionType('playlist-sc'));
+            playBtn.addEventListener('click', () => setSelectionType('play'));
+
+            closeVideoModal.addEventListener('click', () => {
+                videoModal.style.display = 'none';
+                player.pause();
+            });
 
             deleteShortcutsBtn.addEventListener('click', () => {
                 if (shortcutSelections.size === 0) {
@@ -941,12 +969,14 @@
             const bothCircle = getCircle(bothScBtn);
             const deleteCircle = getCircle(deleteScBtn);
             const playlistCircle = getCircle(playlistScBtn);
+            const playCircle = getCircle(playBtn);
             
             if (rootCircle) rootCircle.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--root-sc-color');
             if (subfolderCircle) subfolderCircle.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--subfolder-sc-color');
             if (bothCircle) bothCircle.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--both-sc-color');
             if (deleteCircle) deleteCircle.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--delete-sc-color');
             if (playlistCircle) playlistCircle.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--playlist-sc-color');
+            if (playCircle) playCircle.style.backgroundColor = '#888';
         }
 
         function updateSelectionTypeButtons() {
@@ -955,6 +985,21 @@
             if (bothScBtn) bothScBtn.classList.toggle('active', currentSelectionType === 'both-sc');
             if (deleteScBtn) deleteScBtn.classList.toggle('active', currentSelectionType === 'delete-sc');
             if (playlistScBtn) playlistScBtn.classList.toggle('active', currentSelectionType === 'playlist-sc');
+            if (playBtn) playBtn.classList.toggle('active', currentSelectionType === 'play');
+        }
+
+        function playVideo(file, rotation) {
+            if (currentVideoUrl) {
+                URL.revokeObjectURL(currentVideoUrl);
+            }
+            currentVideoUrl = URL.createObjectURL(file);
+            player.src = currentVideoUrl;
+            player.classList.remove('rotate-90', 'rotate-180', 'rotate-270');
+            if (rotation !== "0") {
+                player.classList.add('rotate-' + rotation);
+            }
+            videoModal.style.display = 'block';
+            player.play();
         }
 
         function renderCanvas(canvasId) {
@@ -1988,6 +2033,10 @@
                     canvasElements.push(rowDiv);
 
                     rowDiv.addEventListener('click', () => {
+                        if (currentSelectionType === 'play') {
+                            playVideo(videoFile, rotation);
+                            return;
+                        }
                         const key = project.path + '|' + videoFile.name;
                         const selectedRotation = rotationSelector.value;
                         const existingSelection = shortcutSelections.get(key);
@@ -2188,7 +2237,20 @@
 
                             canvasElements.push(rowDiv);
 
-                             rowDiv.addEventListener('click', () => {
+                             let videoFile;
+                             rowDiv.addEventListener('click', async () => {
+                                if (currentSelectionType === 'play') {
+                                    if (!videoFile) {
+                                        for await (const entry of subfolderHandle.values()) {
+                                            if (entry.kind === 'file' && entry.name.startsWith(videoBaseName)) {
+                                                videoFile = await entry.getFile();
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    if (videoFile) playVideo(videoFile, rotation);
+                                    return;
+                                }
                                 const key = subfolderName + '|' + videoBaseName;
                                 const selectedRotation = rotationSelector.value;
                                 const existingSelection = shortcutSelections.get(key);
@@ -2542,8 +2604,15 @@
                         updateDisplayedVideo(currentIndex);
                     };
 
-                    rowDiv.addEventListener('click', () => {
+                    rowDiv.addEventListener('click', async () => {
                         const video = candidateVideos[currentIndex];
+                        if (currentSelectionType === 'play') {
+                            const videoFile = await video.getFile();
+                            const videoBaseName = video.name.substring(0, video.name.lastIndexOf('.'));
+                            const loadedRotation = projectRotationData.get(videoBaseName.toLowerCase()) || "0";
+                            playVideo(videoFile, loadedRotation);
+                            return;
+                        }
                         const videoBaseName = video.name.substring(0, video.name.lastIndexOf('.'));
                         const loadedRotation = projectRotationData.get(videoBaseName.toLowerCase()) || "0";
                         const selectedRotation = rotationSelector.value;
