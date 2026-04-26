@@ -46,11 +46,11 @@
             background-color: var(--toolbar-color);
         }
         .bottom-bar {
-            padding: 10px;
+            padding: 10px 10px 20px 10px;
             border-top: 1px solid #444444;
             display: flex;
-            align-items: center;
-            min-height: 36px;
+            align-items: flex-start;
+            min-height: 60px;
             box-sizing: border-box;
             background-color: var(--toolbar-color);
             color: white;
@@ -95,7 +95,7 @@
             top: 0;
             width: 100%;
             height: 100%;
-            overflow: auto;
+            overflow: hidden;
             background-color: rgba(0,0,0,0.8);
             align-items: center;
             justify-content: center;
@@ -500,7 +500,7 @@
                 </div>
             </div>
             <div class="bottom-bar">
-                <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 5px;">
+                <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin-top: 5px;">
                     <button id="root-sc-btn" class="bar-button selection-type-button" style="display: none;"><span class="color-circle"></span>Root SC</button>
                     <button id="subfolder-sc-btn" class="bar-button selection-type-button" style="display: none;"><span class="color-circle"></span>Subfolder SC</button>
                     <button id="both-sc-btn" class="bar-button selection-type-button" style="display: none;"><span class="color-circle"></span>Both</button>
@@ -517,7 +517,7 @@
                     </select>
                     <button id="delete-rotation-btn" class="bar-button" style="display: none;">Delete Rotation</button>
                 </div>
-                <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 5px;">
+                <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin-top: 5px;">
                     <button id="shortcut-script-btn" class="bar-button">Create Shortcut Script</button>
                     <button id="create-playlist-btn" class="bar-button" style="display: none;">Create Playlist</button>
                     <button id="delete-shortcuts-btn" class="bar-button" style="display: none;">Delete Selected Shortcuts</button>
@@ -1005,20 +1005,17 @@
             player.src = currentVideoUrl;
             player.classList.remove('rotate-90', 'rotate-180', 'rotate-270');
 
-            // Reset scaling
+            // Reset scaling and transforms
             player.style.transform = '';
-            player.style.maxWidth = '100%';
-            player.style.maxHeight = '100%';
+            player.style.maxWidth = '90vw';
+            player.style.maxHeight = '90vh';
 
             if (rotation !== "0") {
-                player.classList.add('rotate-' + rotation);
+                player.style.transform = `rotate(${rotation}deg)`;
                 if (rotation === "90" || rotation === "270") {
                     // When rotated 90/270, the width and height effectively swap.
-                    // To ensure it fits, we may need to scale it down.
-                    // A simple approach is to ensure the larger dimension fits in the smaller space.
-                    // We can use a combination of object-fit and transform.
-                    // Since it's rotated 90/270, we want to ensure its original width fits in the container's height
-                    // and its original height fits in the container's width.
+                    // We must ensure the rotated width (original height) fits in 90vw
+                    // and the rotated height (original width) fits in 90vh.
                     player.style.maxWidth = '90vh';
                     player.style.maxHeight = '90vw';
                 }
