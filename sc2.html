@@ -506,6 +506,7 @@
                     <button id="both-sc-btn" class="bar-button selection-type-button" style="display: none;"><span class="color-circle"></span>Both</button>
                     <button id="delete-sc-btn" class="bar-button selection-type-button" style="display: none;"><span class="color-circle"></span>Delete</button>
                     <button id="playlist-sc-btn" class="bar-button selection-type-button" style="display: none;"><span class="color-circle"></span>Playlist</button>
+                    <button id="rotate-sc-btn" class="bar-button selection-type-button"><span class="color-circle"></span>Rotate</button>
                     <button id="play-btn" class="bar-button selection-type-button"><span class="color-circle"></span>Play</button>
                 </div>
                 <div id="rotation-controls" style="display: none; align-items: center;">
@@ -573,6 +574,7 @@
         const bothScBtn = document.getElementById('both-sc-btn');
         const deleteScBtn = document.getElementById('delete-sc-btn');
         const playlistScBtn = document.getElementById('playlist-sc-btn');
+        const rotateScBtn = document.getElementById('rotate-sc-btn');
         const playBtn = document.getElementById('play-btn');
         const videoModal = document.getElementById('video-modal');
         const player = document.getElementById('player');
@@ -892,6 +894,7 @@
 
             deleteScBtn.addEventListener('click', () => setSelectionType('delete-sc'));
             playlistScBtn.addEventListener('click', () => setSelectionType('playlist-sc'));
+            rotateScBtn.addEventListener('click', () => setSelectionType('rotate-sc'));
             playBtn.addEventListener('click', () => setSelectionType('play'));
 
             closeVideoModal.addEventListener('click', () => {
@@ -978,6 +981,7 @@
             const bothCircle = getCircle(bothScBtn);
             const deleteCircle = getCircle(deleteScBtn);
             const playlistCircle = getCircle(playlistScBtn);
+            const rotateCircle = getCircle(rotateScBtn);
             const playCircle = getCircle(playBtn);
             
             if (rootCircle) rootCircle.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--root-sc-color');
@@ -985,6 +989,7 @@
             if (bothCircle) bothCircle.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--both-sc-color');
             if (deleteCircle) deleteCircle.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--delete-sc-color');
             if (playlistCircle) playlistCircle.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--playlist-sc-color');
+            if (rotateCircle) rotateCircle.style.backgroundColor = '#ff8800';
             if (playCircle) playCircle.style.backgroundColor = '#888';
         }
 
@@ -994,6 +999,7 @@
             if (bothScBtn) bothScBtn.classList.toggle('active', currentSelectionType === 'both-sc');
             if (deleteScBtn) deleteScBtn.classList.toggle('active', currentSelectionType === 'delete-sc');
             if (playlistScBtn) playlistScBtn.classList.toggle('active', currentSelectionType === 'playlist-sc');
+            if (rotateScBtn) rotateScBtn.classList.toggle('active', currentSelectionType === 'rotate-sc');
             if (playBtn) playBtn.classList.toggle('active', currentSelectionType === 'play');
         }
 
@@ -1170,7 +1176,14 @@
         function generateShortcutScript() {
             const selectionsToProcess = Array.from(shortcutSelections.values());
             const displayedProjectPaths = new Set(Array.from(canvases.values()).map(c => c.path));
-            const selectedProjectPaths = new Set(selectionsToProcess.map(s => s.type !== 'delete-sc' ? (s.projectPath || "") : null).filter(p => p !== null));
+            const selectedProjectPaths = new Set();
+            selectionsToProcess.forEach(s => {
+                if (s.type !== 'delete-sc') {
+                    selectedProjectPaths.add(s.projectPath || "");
+                } else if (s.rotation && s.rotation !== "0") {
+                    selectedProjectPaths.add(s.projectPath || "");
+                }
+            });
             const dummyTimestampProjects = new Set([...displayedProjectPaths].filter(p => !selectedProjectPaths.has(p)));
 
             let scriptLines = [
@@ -2076,11 +2089,17 @@
                             newRotation = rotation;
                         }
 
+                        const isRotateOnly = currentSelectionType === 'rotate-sc';
+
+                        if (isRotateOnly) {
+                             newRotation = selectedRotation;
+                        }
+
                         const selectionData = {
                             videoName: videoFile.name,
                             projectPath: project.path,
                             subfolder: videoFile.subfolder,
-                            type: currentSelectionType,
+                            type: isRotateOnly ? (existingSelection ? existingSelection.type : '') : currentSelectionType,
                             multiplier: multiplierInput ? (parseInt(multiplierInput.value) || 1) : 1,
                             rotation: newRotation
                         };
@@ -2096,9 +2115,11 @@
                         }
 
                         // If the new selection is different from the old one, or if there was no old one, add it.
-                        if (!existingSelection || existingSelection.type !== currentSelectionType || selectedRotation !== "0") {
+                        if (!existingSelection || existingSelection.type !== currentSelectionType || selectedRotation !== "0" || isRotateOnly) {
                             rowDiv.querySelectorAll('.thumbnail').forEach(t => {
-                                t.classList.add('selected-' + currentSelectionType);
+                                if (selectionData.type) {
+                                    t.classList.add('selected-' + selectionData.type);
+                                }
                                 if (newRotation !== "0") {
                                     t.classList.add('rotate-' + newRotation);
                                 }
@@ -2296,10 +2317,13 @@
                                     newRotation = rotation;
                                 }
 
+                                const isRotateOnly = currentSelectionType === 'rotate-sc';
+                                if (isRotateOnly) newRotation = selectedRotation;
+
                                 const selectionData = {
                                     videoName: videoBaseName,
                                     projectPath: subfolderName,
-                                    type: currentSelectionType,
+                                    type: isRotateOnly ? (existingSelection ? existingSelection.type : '') : currentSelectionType,
                                     rotation: newRotation
                                 };
 
@@ -2313,9 +2337,11 @@
                                     shortcutSelections.delete(key);
                                 }
 
-                                if (!existingSelection || existingSelection.type !== currentSelectionType || selectedRotation !== "0") {
+                                if (!existingSelection || existingSelection.type !== currentSelectionType || selectedRotation !== "0" || isRotateOnly) {
                                     rowDiv.querySelectorAll('.thumbnail').forEach(t => {
-                                        t.classList.add('selected-' + currentSelectionType);
+                                        if (selectionData.type) {
+                                            t.classList.add('selected-' + selectionData.type);
+                                        }
                                         if (newRotation !== "0") {
                                             t.classList.add('rotate-' + newRotation);
                                         }
@@ -2660,10 +2686,13 @@
                             newRotation = loadedRotation;
                         }
 
+                        const isRotateOnly = currentSelectionType === 'rotate-sc';
+                        if (isRotateOnly) newRotation = selectedRotation;
+
                         const selectionData = { 
                             videoName: video.name,
                             projectPath: project.path, 
-                            type: currentSelectionType,
+                            type: isRotateOnly ? (existingSelection ? existingSelection.type : '') : currentSelectionType,
                             multiplier: parseInt(multiplierInput.value) || 1,
                             rotation: newRotation
                         };
@@ -2671,14 +2700,16 @@
                         const existingSelection = shortcutSelections.get(key);
 
                         const allThumbnailsInRow = rowDiv.querySelectorAll('.thumbnail');
-                        allThumbnailsInRow.forEach(t => t.classList.remove('selected-root-sc', 'selected-subfolder-sc', 'selected-both-sc'));
+                        allThumbnailsInRow.forEach(t => t.classList.remove('selected-root-sc', 'selected-subfolder-sc', 'selected-both-sc', 'selected-playlist-sc', 'selected-rotate-sc'));
                         
                         if (existingSelection) {
                             shortcutSelections.delete(key);
                         }
 
-                        if (!existingSelection || existingSelection.type !== currentSelectionType) {
-                            allThumbnailsInRow.forEach(t => t.classList.add('selected-' + currentSelectionType));
+                        if (!existingSelection || existingSelection.type !== currentSelectionType || isRotateOnly) {
+                            if (selectionData.type) {
+                                allThumbnailsInRow.forEach(t => t.classList.add('selected-' + selectionData.type));
+                            }
                             shortcutSelections.set(key, selectionData);
                         }
                         layoutLandscapeThumbnails();
