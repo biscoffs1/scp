@@ -1356,7 +1356,7 @@
                 scriptLines.push('        \$inner = \$matches[1]');
                 scriptLines.push('        \$entries = \$inner -split \',\'');
                 scriptLines.push('        foreach (\$entry in \$entries) {');
-                scriptLines.push('            if (\$entry -match "\\[[\'\\" ]*(.*?)[\'\\" ]*\\]\\s*=\\s*[\'\\" ]?(\\d+)[\'\\" ]?") {');
+                scriptLines.push('            if (\$entry -match "\\[[\'\\"\" ]*(.*?)[\'\\"\" ]*\\]\\s*=\\s*[\'\\"\" ]?(\\d+)[\'\\"\" ]?") {');
                 scriptLines.push('                \$allRotations[\$matches[1]] = \$matches[2]');
                 scriptLines.push('            }');
                 scriptLines.push('        }');
@@ -2788,7 +2788,7 @@
             scriptLines.push('        \$inner = \$matches[1]');
             scriptLines.push('        \$entries = \$inner -split \',\'');
             scriptLines.push('        foreach (\$entry in \$entries) {');
-            scriptLines.push('            if (\$entry -match "\\[[\'\\" ]*(.*?)[\'\\" ]*\\]\\s*=\\s*[\'\\" ]?(\\d+)[\'\\" ]?") {');
+            scriptLines.push('            if (\$entry -match "\\[[\'\\"\" ]*(.*?)[\'\\"\" ]*\\]\\s*=\\s*[\'\\"\" ]?(\\d+)[\'\\"\" ]?") {');
             scriptLines.push('                \$allRotations[\$matches[1]] = \$matches[2]');
             scriptLines.push('            }');
             scriptLines.push('        }');
