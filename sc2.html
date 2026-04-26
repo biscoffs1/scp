@@ -46,17 +46,17 @@
             background-color: var(--toolbar-color);
         }
         .bottom-bar {
-            padding: 10px 10px 20px 10px;
+            padding: 4px 10px;
             border-top: 1px solid #444444;
             display: flex;
-            align-items: flex-start;
-            min-height: 60px;
+            align-items: center;
+            min-height: 32px;
             box-sizing: border-box;
             background-color: var(--toolbar-color);
             color: white;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 5px;
         }
         #thumbnail-container {
             flex-grow: 1;
@@ -215,13 +215,13 @@
             color: #000000;
         }
         .bar-button {
-            min-height: 36px;
-            padding: 4px 12px;
+            min-height: 24px;
+            padding: 2px 8px;
             border: 1px solid #444444;
             background-color: var(--toolbar-color);
             color: #ffffff;
             border-radius: 0;
-            font-size: 14px;
+            font-size: 12px;
             cursor: pointer;
         }
         .bar-button:hover {
@@ -500,7 +500,7 @@
                 </div>
             </div>
             <div class="bottom-bar">
-                <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin-top: 5px;">
+                <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 5px;">
                     <button id="root-sc-btn" class="bar-button selection-type-button" style="display: none;"><span class="color-circle"></span>Root SC</button>
                     <button id="subfolder-sc-btn" class="bar-button selection-type-button" style="display: none;"><span class="color-circle"></span>Subfolder SC</button>
                     <button id="both-sc-btn" class="bar-button selection-type-button" style="display: none;"><span class="color-circle"></span>Both</button>
@@ -517,7 +517,7 @@
                     </select>
                     <button id="delete-rotation-btn" class="bar-button" style="display: none;">Delete Rotation</button>
                 </div>
-                <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin-top: 5px;">
+                <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 5px;">
                     <button id="shortcut-script-btn" class="bar-button">Create Shortcut Script</button>
                     <button id="create-playlist-btn" class="bar-button" style="display: none;">Create Playlist</button>
                     <button id="delete-shortcuts-btn" class="bar-button" style="display: none;">Delete Selected Shortcuts</button>
@@ -2056,7 +2056,10 @@
 
                     rowDiv.addEventListener('click', () => {
                         if (currentSelectionType === 'play') {
-                            playVideo(videoFile, rotation);
+                            const key = project.path + '|' + videoFile.name;
+                            const selection = shortcutSelections.get(key);
+                            const activeRotation = (selection && selection.rotation) ? selection.rotation : rotation;
+                            playVideo(videoFile, activeRotation);
                             return;
                         }
                         const key = project.path + '|' + videoFile.name;
@@ -2270,7 +2273,12 @@
                                             }
                                         }
                                     }
-                                    if (videoFile) playVideo(videoFile, rotation);
+                                    if (videoFile) {
+                                        const key = subfolderName + '|' + videoBaseName;
+                                        const selection = shortcutSelections.get(key);
+                                        const activeRotation = (selection && selection.rotation) ? selection.rotation : rotation;
+                                        playVideo(videoFile, activeRotation);
+                                    }
                                     return;
                                 }
                                 const key = subfolderName + '|' + videoBaseName;
@@ -2632,7 +2640,10 @@
                             const videoFile = await video.getFile();
                             const videoBaseName = video.name.substring(0, video.name.lastIndexOf('.'));
                             const loadedRotation = projectRotationData.get(videoBaseName.toLowerCase()) || "0";
-                            playVideo(videoFile, loadedRotation);
+                            const key = project.path + '|playlist_entry';
+                            const selection = shortcutSelections.get(key);
+                            const activeRotation = (selection && selection.rotation) ? selection.rotation : loadedRotation;
+                            playVideo(videoFile, activeRotation);
                             return;
                         }
                         const videoBaseName = video.name.substring(0, video.name.lastIndexOf('.'));
